@@ -76,7 +76,7 @@ const Index = () => {
       {/* Content After Opening */}
       {showContent && (
         <div className="relative animate-fade-in">
-          <BirthdayScene3D photos={photos} />
+          <BirthdayScene3D photos={photos} birthdayName="Sarah" />
           
           {/* Upload Button Overlay */}
           <div className="absolute top-6 left-6 z-10">

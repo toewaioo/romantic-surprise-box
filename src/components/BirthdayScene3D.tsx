@@ -3,9 +3,10 @@ import * as THREE from "three";
 
 interface BirthdayScene3DProps {
   photos: string[];
+  birthdayName?: string;
 }
 
-export const BirthdayScene3D = ({ photos }: BirthdayScene3DProps) => {
+export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: BirthdayScene3DProps) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -91,53 +92,185 @@ export const BirthdayScene3D = ({ photos }: BirthdayScene3DProps) => {
       scene.add(leg);
     });
 
-    // Cake base (round)
-    const cakeBaseGeometry = new THREE.CylinderGeometry(1.5, 1.5, 1, 32);
+    // Bottom cake layer (largest)
+    const cakeBaseGeometry = new THREE.CylinderGeometry(1.8, 1.8, 1.2, 64);
     const cakeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xffe4e1,
-      roughness: 0.5,
-      metalness: 0.1
+      color: 0xfff8dc,
+      roughness: 0.6,
+      metalness: 0.05
     });
     const cakeBase = new THREE.Mesh(cakeBaseGeometry, cakeMaterial);
-    cakeBase.position.set(0, 0.65, 0);
+    cakeBase.position.set(0, 0.75, 0);
     cakeBase.castShadow = true;
     scene.add(cakeBase);
 
-    // Cake frosting layer
-    const frostingGeometry = new THREE.CylinderGeometry(1.5, 1.5, 0.15, 32);
+    // Decorative cream waves on bottom layer
+    for (let i = 0; i < 24; i++) {
+      const angle = (i / 24) * Math.PI * 2;
+      const waveGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+      const waveMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffb6c1,
+        roughness: 0.3,
+        metalness: 0.2
+      });
+      const wave = new THREE.Mesh(waveGeometry, waveMaterial);
+      wave.position.set(
+        Math.cos(angle) * 1.8,
+        1.35,
+        Math.sin(angle) * 1.8
+      );
+      wave.scale.set(1, 0.7, 0.8);
+      wave.castShadow = true;
+      scene.add(wave);
+    }
+
+    // Bottom frosting layer
+    const frostingGeometry = new THREE.CylinderGeometry(1.82, 1.82, 0.2, 64);
     const frostingMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xffc0cb,
-      roughness: 0.3,
-      metalness: 0.2
+      color: 0xffb6c1,
+      roughness: 0.2,
+      metalness: 0.3
     });
     const frosting = new THREE.Mesh(frostingGeometry, frostingMaterial);
-    frosting.position.set(0, 1.23, 0);
+    frosting.position.set(0, 1.45, 0);
     frosting.castShadow = true;
     scene.add(frosting);
 
-    // Second cake layer
-    const cakeLayer2Geometry = new THREE.CylinderGeometry(1.2, 1.2, 0.8, 32);
+    // Middle cake layer
+    const cakeLayer2Geometry = new THREE.CylinderGeometry(1.4, 1.4, 1, 64);
     const cakeLayer2 = new THREE.Mesh(cakeLayer2Geometry, cakeMaterial);
-    cakeLayer2.position.set(0, 1.7, 0);
+    cakeLayer2.position.set(0, 2.05, 0);
     cakeLayer2.castShadow = true;
     scene.add(cakeLayer2);
 
+    // Middle decorative cream waves
+    for (let i = 0; i < 20; i++) {
+      const angle = (i / 20) * Math.PI * 2;
+      const waveGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+      const wave = new THREE.Mesh(waveGeometry, new THREE.MeshStandardMaterial({ 
+        color: 0xffb6c1,
+        roughness: 0.3,
+        metalness: 0.2
+      }));
+      wave.position.set(
+        Math.cos(angle) * 1.4,
+        2.55,
+        Math.sin(angle) * 1.4
+      );
+      wave.scale.set(1, 0.7, 0.8);
+      wave.castShadow = true;
+      scene.add(wave);
+    }
+
+    // Middle frosting
+    const middleFrostingGeometry = new THREE.CylinderGeometry(1.42, 1.42, 0.18, 64);
+    const middleFrosting = new THREE.Mesh(middleFrostingGeometry, frostingMaterial);
+    middleFrosting.position.set(0, 2.64, 0);
+    middleFrosting.castShadow = true;
+    scene.add(middleFrosting);
+
+    // Top cake layer
+    const cakeLayer3Geometry = new THREE.CylinderGeometry(1, 1, 0.8, 64);
+    const cakeLayer3 = new THREE.Mesh(cakeLayer3Geometry, cakeMaterial);
+    cakeLayer3.position.set(0, 3.14, 0);
+    cakeLayer3.castShadow = true;
+    scene.add(cakeLayer3);
+
+    // Top decorative cream
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 16) * Math.PI * 2;
+      const waveGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+      const wave = new THREE.Mesh(waveGeometry, new THREE.MeshStandardMaterial({ 
+        color: 0xffb6c1,
+        roughness: 0.3,
+        metalness: 0.2
+      }));
+      wave.position.set(
+        Math.cos(angle) * 1,
+        3.54,
+        Math.sin(angle) * 1
+      );
+      wave.scale.set(1, 0.7, 0.8);
+      wave.castShadow = true;
+      scene.add(wave);
+    }
+
     // Top frosting
-    const topFrostingGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.1, 32);
+    const topFrostingGeometry = new THREE.CylinderGeometry(1.02, 1.02, 0.15, 64);
     const topFrosting = new THREE.Mesh(topFrostingGeometry, frostingMaterial);
-    topFrosting.position.set(0, 2.15, 0);
+    topFrosting.position.set(0, 3.62, 0);
     topFrosting.castShadow = true;
     scene.add(topFrosting);
+
+    // Birthday name text on cake
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (context) {
+      canvas.width = 1024;
+      canvas.height = 256;
+      context.fillStyle = '#ffb6c1';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.font = 'bold 80px Arial';
+      context.fillStyle = '#8b0000';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(birthdayName, canvas.width / 2, canvas.height / 2);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      const textGeometry = new THREE.PlaneGeometry(2.4, 0.6);
+      const textMaterial = new THREE.MeshStandardMaterial({ 
+        map: texture,
+        transparent: true,
+        roughness: 0.4
+      });
+      const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+      textMesh.position.set(0, 2.05, 1.41);
+      textMesh.castShadow = true;
+      scene.add(textMesh);
+    }
+
+    // Decorative strawberries on top
+    const strawberryPositions = [
+      [0.5, 3.7, 0.3],
+      [-0.4, 3.7, -0.5],
+      [0.6, 3.7, -0.2],
+      [-0.5, 3.7, 0.4]
+    ];
+    
+    strawberryPositions.forEach(([x, y, z]) => {
+      const strawberryGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+      const strawberryMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xff0000,
+        roughness: 0.6
+      });
+      const strawberry = new THREE.Mesh(strawberryGeometry, strawberryMaterial);
+      strawberry.scale.set(1, 1.2, 1);
+      strawberry.position.set(x, y, z);
+      strawberry.castShadow = true;
+      scene.add(strawberry);
+      
+      // Strawberry leaf
+      const leafGeometry = new THREE.ConeGeometry(0.08, 0.06, 8);
+      const leafMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x228b22,
+        roughness: 0.7
+      });
+      const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+      leaf.position.set(x, y + 0.14, z);
+      leaf.rotation.x = Math.PI;
+      leaf.castShadow = true;
+      scene.add(leaf);
+    });
 
     // Candles and flames
     const candles: THREE.Mesh[] = [];
     const flames: THREE.Mesh[] = [];
     const candlePositions = [
-      [0, 2.2, 0],
-      [-0.5, 2.2, 0],
-      [0.5, 2.2, 0],
-      [0, 2.2, -0.5],
-      [0, 2.2, 0.5]
+      [0, 3.7, 0],
+      [-0.3, 3.7, 0],
+      [0.3, 3.7, 0],
+      [0, 3.7, -0.3],
+      [0, 3.7, 0.3]
     ];
 
     candlePositions.forEach(([x, y, z]) => {
@@ -184,17 +317,21 @@ export const BirthdayScene3D = ({ photos }: BirthdayScene3DProps) => {
       scene.add(candleLight);
     });
 
-    // Photo frames on table
+    // Photo frames on table (random positions)
     const photoFrames: THREE.Group[] = [];
     if (photos.length > 0) {
-      const numPhotos = Math.min(photos.length, 4);
-      const angleStep = (Math.PI * 2) / numPhotos;
-      const radius = 3.2;
+      const numPhotos = Math.min(photos.length, 6);
 
       for (let i = 0; i < numPhotos; i++) {
-        const angle = i * angleStep;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius;
+        // Random position on table
+        const x = (Math.random() - 0.5) * 6;
+        const z = (Math.random() - 0.5) * 6;
+        
+        // Make sure not too close to center (cake area)
+        const distFromCenter = Math.sqrt(x * x + z * z);
+        if (distFromCenter < 2.5) {
+          continue;
+        }
 
         const frameGroup = new THREE.Group();
         
@@ -229,7 +366,9 @@ export const BirthdayScene3D = ({ photos }: BirthdayScene3DProps) => {
         frameGroup.add(stand);
 
         frameGroup.position.set(x, 0.5, z);
-        frameGroup.rotation.y = -angle + Math.PI / 2;
+        // Random rotation for italic/tilted look
+        frameGroup.rotation.y = Math.random() * Math.PI * 2;
+        frameGroup.rotation.z = (Math.random() - 0.5) * 0.3; // Slight tilt
         scene.add(frameGroup);
         photoFrames.push(frameGroup);
       }
