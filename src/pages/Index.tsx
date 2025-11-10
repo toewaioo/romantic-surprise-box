@@ -1,20 +1,42 @@
 import { useState } from "react";
 import { GiftBox } from "@/components/GiftBox";
+import { BirthdayScene3D } from "@/components/BirthdayScene3D";
 import { BirthdayMessage } from "@/components/BirthdayMessage";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { MusicPlayer } from "@/components/MusicPlayer";
 import { Button } from "@/components/ui/button";
-import { Gift, ArrowDown } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Gift, ArrowDown, Upload, Camera } from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
   const [isGiftOpened, setIsGiftOpened] = useState(false);
   const [showContent, setShowContent] = useState(false);
+  const [photos, setPhotos] = useState<string[]>([]);
 
   const handleGiftOpen = () => {
     if (!isGiftOpened) {
       setIsGiftOpened(true);
       setTimeout(() => setShowContent(true), 1500);
     }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setPhotos((prev) => [...prev, e.target!.result as string]);
+            toast.success("Photo added to the scene!");
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   };
 
   return (
@@ -53,9 +75,52 @@ const Index = () => {
 
       {/* Content After Opening */}
       {showContent && (
-        <div className="animate-fade-in">
-          <BirthdayMessage />
-          <PhotoGallery />
+        <div className="relative animate-fade-in">
+          <BirthdayScene3D photos={photos} />
+          
+          {/* Upload Button Overlay */}
+          <div className="absolute top-6 left-6 z-10">
+            <Card className="p-4 bg-card/95 backdrop-blur-sm border-primary/20 shadow-[var(--glow-rose)]">
+              <div className="flex items-center gap-3">
+                <Camera className="w-5 h-5 text-primary" />
+                <label htmlFor="photo-upload">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="cursor-pointer"
+                    onClick={() => document.getElementById('photo-upload')?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Add Photos
+                  </Button>
+                </label>
+                <input
+                  id="photo-upload"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </div>
+              {photos.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {photos.length} photo{photos.length > 1 ? 's' : ''} on table
+                </p>
+              )}
+            </Card>
+          </div>
+
+          {/* Instructions Overlay */}
+          <div className="absolute top-6 right-6 z-10">
+            <Card className="p-3 bg-card/95 backdrop-blur-sm border-primary/20 text-sm text-muted-foreground max-w-xs">
+              <p className="font-semibold text-foreground mb-1">🎂 Interactive Scene</p>
+              <p>• Drag to rotate</p>
+              <p>• Scroll to zoom</p>
+              <p>• Add photos to see them on table</p>
+            </Card>
+          </div>
+
           <MusicPlayer />
         </div>
       )}
