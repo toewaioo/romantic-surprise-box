@@ -374,7 +374,169 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
       }
     }
 
-    // Particles
+    // Wish Envelope on table
+    const envelopeGroup = new THREE.Group();
+    
+    // Envelope body
+    const envelopeGeometry = new THREE.BoxGeometry(1, 0.02, 0.7);
+    const envelopeMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffe4e1,
+      roughness: 0.5
+    });
+    const envelope = new THREE.Mesh(envelopeGeometry, envelopeMaterial);
+    envelope.castShadow = true;
+    envelopeGroup.add(envelope);
+
+    // Envelope flap
+    const flapGeometry = new THREE.BufferGeometry();
+    const flapVertices = new Float32Array([
+      -0.5, 0.01, -0.35,
+      0.5, 0.01, -0.35,
+      0, 0.01, 0.35,
+    ]);
+    flapGeometry.setAttribute('position', new THREE.BufferAttribute(flapVertices, 3));
+    flapGeometry.computeVertexNormals();
+    const flapMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffc0cb,
+      side: THREE.DoubleSide,
+      roughness: 0.5
+    });
+    const flap = new THREE.Mesh(flapGeometry, flapMaterial);
+    flap.castShadow = true;
+    envelopeGroup.add(flap);
+
+    // Heart seal on envelope
+    const heartShape = new THREE.Shape();
+    heartShape.moveTo(0, 0);
+    heartShape.bezierCurveTo(0, -0.1, -0.15, -0.1, -0.15, 0);
+    heartShape.bezierCurveTo(-0.15, 0.05, -0.1, 0.1, 0, 0.15);
+    heartShape.bezierCurveTo(0.1, 0.1, 0.15, 0.05, 0.15, 0);
+    heartShape.bezierCurveTo(0.15, -0.1, 0, -0.1, 0, 0);
+    const heartGeometry = new THREE.ExtrudeGeometry(heartShape, {
+      depth: 0.03,
+      bevelEnabled: false
+    });
+    const heartMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xff1493,
+      roughness: 0.3,
+      metalness: 0.4
+    });
+    const heart = new THREE.Mesh(heartGeometry, heartMaterial);
+    heart.position.set(0, 0.03, 0);
+    heart.rotation.x = -Math.PI / 2;
+    heart.castShadow = true;
+    envelopeGroup.add(heart);
+
+    envelopeGroup.position.set(-2.5, 0.2, 2);
+    envelopeGroup.rotation.y = Math.PI / 6;
+    scene.add(envelopeGroup);
+
+    // Balloons on wall
+    const balloonPositions = [
+      [-8, 4, -8, 0xff69b4], // Pink
+      [-6, 5, -8, 0xffd700], // Gold
+      [-4, 4.5, -8, 0x87ceeb], // Sky blue
+      [4, 5, -8, 0xff1493], // Deep pink
+      [6, 4, -8, 0xffa500], // Orange
+      [8, 4.5, -8, 0x9370db], // Purple
+    ];
+
+    balloonPositions.forEach(([x, y, z, color]) => {
+      // Balloon
+      const balloonGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+      balloonGeometry.scale(1, 1.2, 1);
+      const balloonMaterial = new THREE.MeshStandardMaterial({ 
+        color: color as number,
+        roughness: 0.3,
+        metalness: 0.6
+      });
+      const balloon = new THREE.Mesh(balloonGeometry, balloonMaterial);
+      balloon.position.set(x, y, z);
+      balloon.castShadow = true;
+      scene.add(balloon);
+
+      // String
+      const stringGeometry = new THREE.CylinderGeometry(0.01, 0.01, 2, 8);
+      const stringMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        roughness: 0.7
+      });
+      const string = new THREE.Mesh(stringGeometry, stringMaterial);
+      string.position.set(x, y - 1.5, z);
+      scene.add(string);
+    });
+
+    // "Happy Birthday" text on wall
+    const textCanvas = document.createElement('canvas');
+    const textContext = textCanvas.getContext('2d');
+    if (textContext) {
+      textCanvas.width = 2048;
+      textCanvas.height = 512;
+      textContext.fillStyle = 'transparent';
+      textContext.fillRect(0, 0, textCanvas.width, textCanvas.height);
+      textContext.font = 'bold 120px Arial';
+      textContext.fillStyle = '#ff1493';
+      textContext.strokeStyle = '#ffd700';
+      textContext.lineWidth = 8;
+      textContext.textAlign = 'center';
+      textContext.textBaseline = 'middle';
+      textContext.strokeText('HAPPY BIRTHDAY!', textCanvas.width / 2, textCanvas.height / 2);
+      textContext.fillText('HAPPY BIRTHDAY!', textCanvas.width / 2, textCanvas.height / 2);
+      
+      const wallTextTexture = new THREE.CanvasTexture(textCanvas);
+      const wallTextGeometry = new THREE.PlaneGeometry(10, 2.5);
+      const wallTextMaterial = new THREE.MeshStandardMaterial({ 
+        map: wallTextTexture,
+        transparent: true,
+        side: THREE.DoubleSide
+      });
+      const wallText = new THREE.Mesh(wallTextGeometry, wallTextMaterial);
+      wallText.position.set(0, 6, -7.8);
+      scene.add(wallText);
+    }
+
+    // Confetti particles (celebration effect)
+    const confettiGeometry = new THREE.BufferGeometry();
+    const confettiCount = 500;
+    const confettiPosArray = new Float32Array(confettiCount * 3);
+    const confettiColors = new Float32Array(confettiCount * 3);
+    const confettiVelocities: number[] = [];
+
+    for (let i = 0; i < confettiCount; i++) {
+      confettiPosArray[i * 3] = (Math.random() - 0.5) * 20;
+      confettiPosArray[i * 3 + 1] = Math.random() * 15 + 5;
+      confettiPosArray[i * 3 + 2] = (Math.random() - 0.5) * 20;
+
+      const colorChoice = Math.random();
+      if (colorChoice < 0.33) {
+        confettiColors[i * 3] = 1;
+        confettiColors[i * 3 + 1] = 0.7;
+        confettiColors[i * 3 + 2] = 0.8; // Pink
+      } else if (colorChoice < 0.66) {
+        confettiColors[i * 3] = 1;
+        confettiColors[i * 3 + 1] = 0.84;
+        confettiColors[i * 3 + 2] = 0; // Gold
+      } else {
+        confettiColors[i * 3] = 0.58;
+        confettiColors[i * 3 + 1] = 0.44;
+        confettiColors[i * 3 + 2] = 0.86; // Purple
+      }
+
+      confettiVelocities.push(Math.random() * 0.02 + 0.01);
+    }
+
+    confettiGeometry.setAttribute('position', new THREE.BufferAttribute(confettiPosArray, 3));
+    confettiGeometry.setAttribute('color', new THREE.BufferAttribute(confettiColors, 3));
+    const confettiMaterial = new THREE.PointsMaterial({
+      size: 0.15,
+      vertexColors: true,
+      transparent: true,
+      opacity: 1,
+    });
+    const confettiMesh = new THREE.Points(confettiGeometry, confettiMaterial);
+    scene.add(confettiMesh);
+
+    // Ambient particles
     const particlesGeometry = new THREE.BufferGeometry();
     const particlesCount = 300;
     const posArray = new Float32Array(particlesCount * 3);
@@ -434,8 +596,10 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
     renderer.domElement.addEventListener('wheel', handleWheel, { passive: false });
 
     // Animation
+    let animationTime = 0;
     const animate = () => {
       requestAnimationFrame(animate);
+      animationTime += 0.016;
 
       // Rotate entire scene based on mouse
       scene.rotation.y = rotationY;
@@ -451,6 +615,25 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
       // Gentle table rotation
       if (!isDragging) {
         scene.rotation.y += 0.002;
+      }
+
+      // Animate confetti falling
+      const positions = confettiGeometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < confettiCount; i++) {
+        positions[i * 3 + 1] -= confettiVelocities[i];
+        
+        // Reset confetti when it falls below ground
+        if (positions[i * 3 + 1] < -2) {
+          positions[i * 3 + 1] = 20;
+          positions[i * 3] = (Math.random() - 0.5) * 20;
+          positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+        }
+      }
+      confettiGeometry.attributes.position.needsUpdate = true;
+
+      // Fade out confetti after 5 seconds
+      if (animationTime > 5 && confettiMaterial.opacity > 0) {
+        confettiMaterial.opacity -= 0.01;
       }
 
       // Animate particles
