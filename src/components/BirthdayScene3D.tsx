@@ -14,7 +14,8 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xfff5f5);
+    scene.background = new THREE.Color(0xfff9f9);
+    scene.fog = new THREE.Fog(0xfff9f9, 15, 35);
     
     const camera = new THREE.PerspectiveCamera(
       60,
@@ -32,30 +33,37 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
     mountRef.current.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 15, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    directionalLight.position.set(10, 20, 8);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.mapSize.width = 4096;
+    directionalLight.shadow.mapSize.height = 4096;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
     scene.add(directionalLight);
 
-    const pointLight1 = new THREE.PointLight(0xffb6c1, 1.5, 20);
-    pointLight1.position.set(-5, 5, 5);
+    const pointLight1 = new THREE.PointLight(0xffe4e1, 2, 25);
+    pointLight1.position.set(-8, 8, 5);
     scene.add(pointLight1);
 
-    const pointLight2 = new THREE.PointLight(0xffd700, 1.2, 20);
-    pointLight2.position.set(5, 5, -5);
+    const pointLight2 = new THREE.PointLight(0xffd4e5, 2, 25);
+    pointLight2.position.set(8, 8, 5);
     scene.add(pointLight2);
 
-    // Floor
-    const floorGeometry = new THREE.PlaneGeometry(30, 30);
+    const rimLight = new THREE.DirectionalLight(0xffc0e8, 0.6);
+    rimLight.position.set(-10, 5, -10);
+    scene.add(rimLight);
+
+    // Floor with gradient effect
+    const floorGeometry = new THREE.PlaneGeometry(35, 35, 50, 50);
     const floorMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xf5e6e8,
-      roughness: 0.8,
-      metalness: 0.2
+      color: 0xfff0f5,
+      roughness: 0.6,
+      metalness: 0.15,
+      envMapIntensity: 0.5
     });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
@@ -63,12 +71,13 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Table
-    const tableTopGeometry = new THREE.BoxGeometry(8, 0.3, 8);
+    // Elegant Table
+    const tableTopGeometry = new THREE.BoxGeometry(9, 0.4, 9);
     const tableMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x8b4513,
-      roughness: 0.6,
-      metalness: 0.1
+      color: 0xf5f5dc,
+      roughness: 0.3,
+      metalness: 0.4,
+      envMapIntensity: 1
     });
     const tableTop = new THREE.Mesh(tableTopGeometry, tableMaterial);
     tableTop.position.y = 0;
@@ -76,13 +85,13 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
     tableTop.receiveShadow = true;
     scene.add(tableTop);
 
-    // Table legs
-    const legGeometry = new THREE.CylinderGeometry(0.15, 0.15, 2, 16);
+    // Elegant Table legs with carved design
+    const legGeometry = new THREE.CylinderGeometry(0.12, 0.18, 2, 32);
     const legPositions = [
-      [-3, -1, -3],
-      [3, -1, -3],
-      [-3, -1, 3],
-      [3, -1, 3]
+      [-3.5, -1, -3.5],
+      [3.5, -1, -3.5],
+      [-3.5, -1, 3.5],
+      [3.5, -1, 3.5]
     ];
     
     legPositions.forEach(([x, y, z]) => {
@@ -90,230 +99,338 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
       leg.position.set(x, y, z);
       leg.castShadow = true;
       scene.add(leg);
+      
+      // Decorative ring on leg
+      const ringGeometry = new THREE.TorusGeometry(0.2, 0.03, 16, 32);
+      const ring = new THREE.Mesh(ringGeometry, tableMaterial);
+      ring.position.set(x, y + 0.5, z);
+      ring.rotation.x = Math.PI / 2;
+      scene.add(ring);
     });
 
-    // Bottom cake layer (largest)
-    const cakeBaseGeometry = new THREE.CylinderGeometry(1.8, 1.8, 1.2, 64);
+    // Bottom cake layer with smooth edges
+    const cakeBaseGeometry = new THREE.CylinderGeometry(2, 2, 1.4, 64);
     const cakeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xfff8dc,
-      roughness: 0.6,
-      metalness: 0.05
+      color: 0xfffaf0,
+      roughness: 0.4,
+      metalness: 0.1,
+      envMapIntensity: 0.8
     });
     const cakeBase = new THREE.Mesh(cakeBaseGeometry, cakeMaterial);
-    cakeBase.position.set(0, 0.75, 0);
+    cakeBase.position.set(0, 0.85, 0);
     cakeBase.castShadow = true;
+    cakeBase.receiveShadow = true;
     scene.add(cakeBase);
 
-    // Decorative cream waves on bottom layer
-    for (let i = 0; i < 24; i++) {
-      const angle = (i / 24) * Math.PI * 2;
-      const waveGeometry = new THREE.SphereGeometry(0.12, 16, 16);
-      const waveMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0xffb6c1,
-        roughness: 0.3,
-        metalness: 0.2
+    // Elegant decorative rosettes on bottom layer
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 16) * Math.PI * 2;
+      const rosetteGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+      const rosetteMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffc0cb,
+        roughness: 0.2,
+        metalness: 0.4,
+        emissive: 0xffc0cb,
+        emissiveIntensity: 0.1
       });
-      const wave = new THREE.Mesh(waveGeometry, waveMaterial);
-      wave.position.set(
-        Math.cos(angle) * 1.8,
-        1.35,
-        Math.sin(angle) * 1.8
+      const rosette = new THREE.Mesh(rosetteGeometry, rosetteMaterial);
+      rosette.position.set(
+        Math.cos(angle) * 2,
+        1.55,
+        Math.sin(angle) * 2
       );
-      wave.scale.set(1, 0.7, 0.8);
-      wave.castShadow = true;
-      scene.add(wave);
+      rosette.scale.set(1, 0.8, 1);
+      rosette.castShadow = true;
+      scene.add(rosette);
+      
+      // Pearl decoration
+      const pearlGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+      const pearlMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff,
+        roughness: 0.1,
+        metalness: 0.8
+      });
+      const pearl = new THREE.Mesh(pearlGeometry, pearlMaterial);
+      pearl.position.set(
+        Math.cos(angle) * 2,
+        1.6,
+        Math.sin(angle) * 2
+      );
+      pearl.castShadow = true;
+      scene.add(pearl);
     }
 
-    // Bottom frosting layer
-    const frostingGeometry = new THREE.CylinderGeometry(1.82, 1.82, 0.2, 64);
+    // Elegant bottom frosting layer with shimmer
+    const frostingGeometry = new THREE.CylinderGeometry(2.05, 2.05, 0.25, 64);
     const frostingMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xffb6c1,
-      roughness: 0.2,
-      metalness: 0.3
+      color: 0xffd4e5,
+      roughness: 0.15,
+      metalness: 0.5,
+      emissive: 0xffd4e5,
+      emissiveIntensity: 0.15
     });
     const frosting = new THREE.Mesh(frostingGeometry, frostingMaterial);
-    frosting.position.set(0, 1.45, 0);
+    frosting.position.set(0, 1.67, 0);
     frosting.castShadow = true;
     scene.add(frosting);
 
-    // Middle cake layer
-    const cakeLayer2Geometry = new THREE.CylinderGeometry(1.4, 1.4, 1, 64);
+    // Middle cake layer with elegant proportions
+    const cakeLayer2Geometry = new THREE.CylinderGeometry(1.5, 1.5, 1.2, 64);
     const cakeLayer2 = new THREE.Mesh(cakeLayer2Geometry, cakeMaterial);
-    cakeLayer2.position.set(0, 2.05, 0);
+    cakeLayer2.position.set(0, 2.5, 0);
     cakeLayer2.castShadow = true;
+    cakeLayer2.receiveShadow = true;
     scene.add(cakeLayer2);
 
-    // Middle decorative cream waves
-    for (let i = 0; i < 20; i++) {
-      const angle = (i / 20) * Math.PI * 2;
-      const waveGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-      const wave = new THREE.Mesh(waveGeometry, new THREE.MeshStandardMaterial({ 
-        color: 0xffb6c1,
-        roughness: 0.3,
-        metalness: 0.2
-      }));
-      wave.position.set(
-        Math.cos(angle) * 1.4,
-        2.55,
-        Math.sin(angle) * 1.4
+    // Middle decorative rosettes
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const rosetteGeometry = new THREE.SphereGeometry(0.13, 32, 32);
+      const rosetteMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffe4f0,
+        roughness: 0.2,
+        metalness: 0.4,
+        emissive: 0xffe4f0,
+        emissiveIntensity: 0.1
+      });
+      const rosette = new THREE.Mesh(rosetteGeometry, rosetteMaterial);
+      rosette.position.set(
+        Math.cos(angle) * 1.5,
+        3.1,
+        Math.sin(angle) * 1.5
       );
-      wave.scale.set(1, 0.7, 0.8);
-      wave.castShadow = true;
-      scene.add(wave);
+      rosette.scale.set(1, 0.8, 1);
+      rosette.castShadow = true;
+      scene.add(rosette);
     }
 
-    // Middle frosting
-    const middleFrostingGeometry = new THREE.CylinderGeometry(1.42, 1.42, 0.18, 64);
+    // Middle frosting with shimmer
+    const middleFrostingGeometry = new THREE.CylinderGeometry(1.55, 1.55, 0.22, 64);
     const middleFrosting = new THREE.Mesh(middleFrostingGeometry, frostingMaterial);
-    middleFrosting.position.set(0, 2.64, 0);
+    middleFrosting.position.set(0, 3.21, 0);
     middleFrosting.castShadow = true;
     scene.add(middleFrosting);
 
-    // Top cake layer
-    const cakeLayer3Geometry = new THREE.CylinderGeometry(1, 1, 0.8, 64);
+    // Top cake layer with elegant design
+    const cakeLayer3Geometry = new THREE.CylinderGeometry(1.1, 1.1, 0.9, 64);
     const cakeLayer3 = new THREE.Mesh(cakeLayer3Geometry, cakeMaterial);
-    cakeLayer3.position.set(0, 3.14, 0);
+    cakeLayer3.position.set(0, 3.87, 0);
     cakeLayer3.castShadow = true;
+    cakeLayer3.receiveShadow = true;
     scene.add(cakeLayer3);
 
-    // Top decorative cream
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2;
-      const waveGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-      const wave = new THREE.Mesh(waveGeometry, new THREE.MeshStandardMaterial({ 
-        color: 0xffb6c1,
-        roughness: 0.3,
-        metalness: 0.2
-      }));
-      wave.position.set(
-        Math.cos(angle) * 1,
-        3.54,
-        Math.sin(angle) * 1
+    // Top decorative rosettes with elegant spacing
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const rosetteGeometry = new THREE.SphereGeometry(0.11, 32, 32);
+      const rosetteMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xfff0f8,
+        roughness: 0.2,
+        metalness: 0.4,
+        emissive: 0xfff0f8,
+        emissiveIntensity: 0.12
+      });
+      const rosette = new THREE.Mesh(rosetteGeometry, rosetteMaterial);
+      rosette.position.set(
+        Math.cos(angle) * 1.1,
+        4.32,
+        Math.sin(angle) * 1.1
       );
-      wave.scale.set(1, 0.7, 0.8);
-      wave.castShadow = true;
-      scene.add(wave);
+      rosette.scale.set(1, 0.8, 1);
+      rosette.castShadow = true;
+      scene.add(rosette);
     }
 
-    // Top frosting
-    const topFrostingGeometry = new THREE.CylinderGeometry(1.02, 1.02, 0.15, 64);
+    // Top frosting with elegant finish
+    const topFrostingGeometry = new THREE.CylinderGeometry(1.15, 1.15, 0.18, 64);
     const topFrosting = new THREE.Mesh(topFrostingGeometry, frostingMaterial);
-    topFrosting.position.set(0, 3.62, 0);
+    topFrosting.position.set(0, 4.41, 0);
     topFrosting.castShadow = true;
     scene.add(topFrosting);
 
-    // Birthday name text on cake
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (context) {
-      canvas.width = 1024;
-      canvas.height = 256;
-      context.fillStyle = '#ffb6c1';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.font = 'bold 80px Arial';
-      context.fillStyle = '#8b0000';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
-      context.fillText(birthdayName, canvas.width / 2, canvas.height / 2);
+    // Elegant birthday name plaque on cake
+    const nameCanvas = document.createElement('canvas');
+    const nameContext = nameCanvas.getContext('2d');
+    if (nameContext) {
+      nameCanvas.width = 1024;
+      nameCanvas.height = 256;
       
-      const texture = new THREE.CanvasTexture(canvas);
-      const textGeometry = new THREE.PlaneGeometry(2.4, 0.6);
-      const textMaterial = new THREE.MeshStandardMaterial({ 
-        map: texture,
+      // Create gradient background
+      const gradient = nameContext.createLinearGradient(0, 0, nameCanvas.width, 0);
+      gradient.addColorStop(0, '#ffe4f0');
+      gradient.addColorStop(0.5, '#ffd4e5');
+      gradient.addColorStop(1, '#ffe4f0');
+      nameContext.fillStyle = gradient;
+      nameContext.fillRect(0, 0, nameCanvas.width, nameCanvas.height);
+      
+      // Add elegant text with shadow
+      nameContext.font = 'bold italic 90px Georgia';
+      nameContext.fillStyle = '#8b0040';
+      nameContext.strokeStyle = '#ffd700';
+      nameContext.lineWidth = 3;
+      nameContext.textAlign = 'center';
+      nameContext.textBaseline = 'middle';
+      nameContext.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      nameContext.shadowBlur = 10;
+      nameContext.shadowOffsetX = 3;
+      nameContext.shadowOffsetY = 3;
+      nameContext.strokeText(birthdayName, nameCanvas.width / 2, nameCanvas.height / 2);
+      nameContext.fillText(birthdayName, nameCanvas.width / 2, nameCanvas.height / 2);
+      
+      const nameTexture = new THREE.CanvasTexture(nameCanvas);
+      const nameGeometry = new THREE.PlaneGeometry(2.8, 0.7);
+      const nameMaterial = new THREE.MeshStandardMaterial({ 
+        map: nameTexture,
         transparent: true,
-        roughness: 0.4
+        roughness: 0.3,
+        metalness: 0.3
       });
-      const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-      textMesh.position.set(0, 2.05, 1.41);
-      textMesh.castShadow = true;
-      scene.add(textMesh);
+      const namePlaque = new THREE.Mesh(nameGeometry, nameMaterial);
+      namePlaque.position.set(0, 2.5, 1.52);
+      namePlaque.castShadow = true;
+      scene.add(namePlaque);
+      
+      // Frame for the plaque
+      const frameGeometry = new THREE.BoxGeometry(2.9, 0.05, 0.05);
+      const frameMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffd700,
+        roughness: 0.2,
+        metalness: 0.8
+      });
+      [-0.4, 0.4].forEach(yOffset => {
+        const frame = new THREE.Mesh(frameGeometry, frameMaterial);
+        frame.position.set(0, 2.5 + yOffset, 1.54);
+        scene.add(frame);
+      });
     }
 
-    // Decorative strawberries on top
-    const strawberryPositions = [
-      [0.5, 3.7, 0.3],
-      [-0.4, 3.7, -0.5],
-      [0.6, 3.7, -0.2],
-      [-0.5, 3.7, 0.4]
+    // Beautiful decorative strawberries and fruits on top
+    const fruitPositions = [
+      [0.55, 4.5, 0.35],
+      [-0.45, 4.5, -0.55],
+      [0.65, 4.5, -0.25],
+      [-0.55, 4.5, 0.45],
+      [0, 4.5, -0.6],
+      [0, 4.5, 0.6]
     ];
     
-    strawberryPositions.forEach(([x, y, z]) => {
-      const strawberryGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+    fruitPositions.forEach(([x, y, z], index) => {
+      const strawberryGeometry = new THREE.SphereGeometry(0.14, 32, 32);
       const strawberryMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0xff0000,
-        roughness: 0.6
+        color: 0xff1744,
+        roughness: 0.4,
+        metalness: 0.2,
+        emissive: 0xff1744,
+        emissiveIntensity: 0.1
       });
       const strawberry = new THREE.Mesh(strawberryGeometry, strawberryMaterial);
-      strawberry.scale.set(1, 1.2, 1);
+      strawberry.scale.set(1, 1.3, 1);
       strawberry.position.set(x, y, z);
       strawberry.castShadow = true;
       scene.add(strawberry);
       
-      // Strawberry leaf
-      const leafGeometry = new THREE.ConeGeometry(0.08, 0.06, 8);
+      // Detailed strawberry leaf
+      const leafGeometry = new THREE.ConeGeometry(0.1, 0.08, 8);
       const leafMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x228b22,
-        roughness: 0.7
+        color: 0x2e7d32,
+        roughness: 0.6,
+        metalness: 0.1
       });
       const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
-      leaf.position.set(x, y + 0.14, z);
+      leaf.position.set(x, y + 0.17, z);
       leaf.rotation.x = Math.PI;
       leaf.castShadow = true;
       scene.add(leaf);
+      
+      // Add sparkle on fruit
+      const sparkleGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+      const sparkleMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.8
+      });
+      const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
+      sparkle.position.set(x + 0.05, y + 0.08, z + 0.05);
+      scene.add(sparkle);
     });
 
-    // Candles and flames
+    // Elegant candles with realistic flames
     const candles: THREE.Mesh[] = [];
     const flames: THREE.Mesh[] = [];
     const candlePositions = [
-      [0, 3.7, 0],
-      [-0.3, 3.7, 0],
-      [0.3, 3.7, 0],
-      [0, 3.7, -0.3],
-      [0, 3.7, 0.3]
+      [0, 4.5, 0],
+      [-0.35, 4.5, 0],
+      [0.35, 4.5, 0]
     ];
 
     candlePositions.forEach(([x, y, z]) => {
-      // Candle
-      const candleGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 16);
+      // Striped elegant candle
+      const candleGeometry = new THREE.CylinderGeometry(0.09, 0.09, 0.7, 32);
       const candleMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0xffffff,
-        roughness: 0.4
+        color: 0xffd4e5,
+        roughness: 0.3,
+        metalness: 0.5,
+        emissive: 0xffd4e5,
+        emissiveIntensity: 0.1
       });
       const candle = new THREE.Mesh(candleGeometry, candleMaterial);
-      candle.position.set(x, y + 0.3, z);
+      candle.position.set(x, y + 0.35, z);
       candle.castShadow = true;
       scene.add(candle);
       candles.push(candle);
 
-      // Flame
-      const flameGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+      // Gold stripe on candle
+      const stripeGeometry = new THREE.CylinderGeometry(0.095, 0.095, 0.1, 32);
+      const stripeMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffd700,
+        roughness: 0.2,
+        metalness: 0.8
+      });
+      const stripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+      stripe.position.set(x, y + 0.35, z);
+      scene.add(stripe);
+
+      // Realistic flame with multiple layers
+      const flameGeometry = new THREE.SphereGeometry(0.12, 32, 32);
       const flameMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xff6600,
+        color: 0xff4500,
         transparent: true,
-        opacity: 0.9
+        opacity: 1
       });
       const flame = new THREE.Mesh(flameGeometry, flameMaterial);
-      flame.scale.set(0.8, 1.2, 0.8);
-      flame.position.set(x, y + 0.7, z);
+      flame.scale.set(0.7, 1.4, 0.7);
+      flame.position.set(x, y + 0.82, z);
       scene.add(flame);
       flames.push(flame);
 
-      // Flame glow
-      const flameGlowGeometry = new THREE.SphereGeometry(0.2, 16, 16);
-      const flameGlowMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xffaa00,
+      // Inner flame (brighter)
+      const innerFlameGeometry = new THREE.SphereGeometry(0.08, 32, 32);
+      const innerFlameMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffff00,
         transparent: true,
-        opacity: 0.4
+        opacity: 0.9
       });
-      const flameGlow = new THREE.Mesh(flameGlowGeometry, flameGlowMaterial);
-      flameGlow.position.set(x, y + 0.7, z);
-      scene.add(flameGlow);
-      flames.push(flameGlow);
+      const innerFlame = new THREE.Mesh(innerFlameGeometry, innerFlameMaterial);
+      innerFlame.scale.set(0.8, 1.3, 0.8);
+      innerFlame.position.set(x, y + 0.82, z);
+      scene.add(innerFlame);
+      flames.push(innerFlame);
 
-      // Point light for each candle
-      const candleLight = new THREE.PointLight(0xff6600, 0.8, 3);
-      candleLight.position.set(x, y + 0.7, z);
+      // Outer glow
+      const glowGeometry = new THREE.SphereGeometry(0.18, 32, 32);
+      const glowMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xffa500,
+        transparent: true,
+        opacity: 0.3
+      });
+      const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+      glow.position.set(x, y + 0.82, z);
+      scene.add(glow);
+      flames.push(glow);
+
+      // Dynamic candle light with higher intensity
+      const candleLight = new THREE.PointLight(0xff8800, 1.5, 4);
+      candleLight.position.set(x, y + 0.82, z);
       scene.add(candleLight);
     });
 
@@ -374,185 +491,294 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
       }
     }
 
-    // Wish Envelope on table
+    // Elegant Wish Envelope on table
     const envelopeGroup = new THREE.Group();
     
-    // Envelope body
-    const envelopeGeometry = new THREE.BoxGeometry(1, 0.02, 0.7);
+    // Premium envelope body with texture
+    const envelopeGeometry = new THREE.BoxGeometry(1.2, 0.03, 0.85);
     const envelopeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xffe4e1,
-      roughness: 0.5
+      color: 0xfffaf0,
+      roughness: 0.4,
+      metalness: 0.3,
+      envMapIntensity: 0.7
     });
     const envelope = new THREE.Mesh(envelopeGeometry, envelopeMaterial);
     envelope.castShadow = true;
     envelopeGroup.add(envelope);
 
-    // Envelope flap
+    // Elegant envelope flap
     const flapGeometry = new THREE.BufferGeometry();
     const flapVertices = new Float32Array([
-      -0.5, 0.01, -0.35,
-      0.5, 0.01, -0.35,
-      0, 0.01, 0.35,
+      -0.6, 0.015, -0.425,
+      0.6, 0.015, -0.425,
+      0, 0.015, 0.425,
     ]);
     flapGeometry.setAttribute('position', new THREE.BufferAttribute(flapVertices, 3));
     flapGeometry.computeVertexNormals();
     const flapMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xffc0cb,
+      color: 0xffe4f0,
       side: THREE.DoubleSide,
-      roughness: 0.5
+      roughness: 0.3,
+      metalness: 0.4
     });
     const flap = new THREE.Mesh(flapGeometry, flapMaterial);
     flap.castShadow = true;
     envelopeGroup.add(flap);
 
-    // Heart seal on envelope
+    // Elegant heart seal with glow
     const heartShape = new THREE.Shape();
     heartShape.moveTo(0, 0);
-    heartShape.bezierCurveTo(0, -0.1, -0.15, -0.1, -0.15, 0);
-    heartShape.bezierCurveTo(-0.15, 0.05, -0.1, 0.1, 0, 0.15);
-    heartShape.bezierCurveTo(0.1, 0.1, 0.15, 0.05, 0.15, 0);
-    heartShape.bezierCurveTo(0.15, -0.1, 0, -0.1, 0, 0);
+    heartShape.bezierCurveTo(0, -0.12, -0.18, -0.12, -0.18, 0);
+    heartShape.bezierCurveTo(-0.18, 0.06, -0.12, 0.12, 0, 0.18);
+    heartShape.bezierCurveTo(0.12, 0.12, 0.18, 0.06, 0.18, 0);
+    heartShape.bezierCurveTo(0.18, -0.12, 0, -0.12, 0, 0);
     const heartGeometry = new THREE.ExtrudeGeometry(heartShape, {
-      depth: 0.03,
-      bevelEnabled: false
+      depth: 0.04,
+      bevelEnabled: true,
+      bevelThickness: 0.01,
+      bevelSize: 0.01,
+      bevelSegments: 5
     });
     const heartMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xff1493,
-      roughness: 0.3,
-      metalness: 0.4
+      color: 0xff1470,
+      roughness: 0.2,
+      metalness: 0.6,
+      emissive: 0xff1470,
+      emissiveIntensity: 0.2
     });
     const heart = new THREE.Mesh(heartGeometry, heartMaterial);
-    heart.position.set(0, 0.03, 0);
+    heart.position.set(0, 0.04, 0);
     heart.rotation.x = -Math.PI / 2;
     heart.castShadow = true;
     envelopeGroup.add(heart);
 
-    envelopeGroup.position.set(-2.5, 0.2, 2);
-    envelopeGroup.rotation.y = Math.PI / 6;
+    // Gold trim on envelope edges
+    const trimGeometry = new THREE.BoxGeometry(1.22, 0.01, 0.01);
+    const trimMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffd700,
+      roughness: 0.2,
+      metalness: 0.9
+    });
+    [-0.43, 0.43].forEach(zPos => {
+      const trim = new THREE.Mesh(trimGeometry, trimMaterial);
+      trim.position.set(0, 0.02, zPos);
+      envelopeGroup.add(trim);
+    });
+
+    envelopeGroup.position.set(-3.2, 0.25, 2.8);
+    envelopeGroup.rotation.y = Math.PI / 5;
+    envelopeGroup.rotation.z = -0.05;
     scene.add(envelopeGroup);
 
-    // Balloons on wall
-    const balloonPositions = [
-      [-8, 4, -8, 0xff69b4], // Pink
-      [-6, 5, -8, 0xffd700], // Gold
-      [-4, 4.5, -8, 0x87ceeb], // Sky blue
-      [4, 5, -8, 0xff1493], // Deep pink
-      [6, 4, -8, 0xffa500], // Orange
-      [8, 4.5, -8, 0x9370db], // Purple
+    // Beautiful floating balloons with shine
+    const balloonData = [
+      [-10, 5, -8, 0xff1493, 0.65], // Hot pink
+      [-7, 6.5, -8, 0xffd700, 0.7], // Gold
+      [-4, 5.5, -8, 0xff69b4, 0.6], // Light pink
+      [-1, 7, -8, 0xda70d6, 0.75], // Orchid
+      [2, 6, -8, 0xffe4e1, 0.65], // Misty rose
+      [5, 5.5, -8, 0xffb6c1, 0.7], // Light pink
+      [8, 6.5, -8, 0xffc0cb, 0.68], // Pink
+      [11, 5, -8, 0xff1493, 0.72], // Deep pink
     ];
 
-    balloonPositions.forEach(([x, y, z, color]) => {
-      // Balloon
-      const balloonGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-      balloonGeometry.scale(1, 1.2, 1);
+    balloonData.forEach(([x, y, z, color, scale]) => {
+      // Realistic balloon with highlight
+      const balloonGeometry = new THREE.SphereGeometry(0.55, 64, 64);
+      balloonGeometry.scale(1, 1.3, 1);
       const balloonMaterial = new THREE.MeshStandardMaterial({ 
         color: color as number,
-        roughness: 0.3,
-        metalness: 0.6
+        roughness: 0.2,
+        metalness: 0.7,
+        emissive: color as number,
+        emissiveIntensity: 0.15,
+        envMapIntensity: 1.2
       });
       const balloon = new THREE.Mesh(balloonGeometry, balloonMaterial);
       balloon.position.set(x, y, z);
+      balloon.scale.setScalar(scale as number);
       balloon.castShadow = true;
       scene.add(balloon);
 
-      // String
-      const stringGeometry = new THREE.CylinderGeometry(0.01, 0.01, 2, 8);
-      const stringMaterial = new THREE.MeshStandardMaterial({ 
+      // Highlight on balloon
+      const highlightGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+      const highlightMaterial = new THREE.MeshBasicMaterial({ 
         color: 0xffffff,
-        roughness: 0.7
+        transparent: true,
+        opacity: 0.6
+      });
+      const highlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+      highlight.position.set(x - 0.2, y + 0.3, z + 0.4);
+      highlight.scale.setScalar(scale as number);
+      scene.add(highlight);
+
+      // Elegant ribbon string
+      const stringGeometry = new THREE.CylinderGeometry(0.012, 0.012, 2.5, 16);
+      const stringMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffd700,
+        roughness: 0.4,
+        metalness: 0.6
       });
       const string = new THREE.Mesh(stringGeometry, stringMaterial);
-      string.position.set(x, y - 1.5, z);
+      string.position.set(x, y - 1.9, z);
       scene.add(string);
+
+      // String knot at bottom
+      const knotGeometry = new THREE.SphereGeometry(0.05, 16, 16);
+      const knot = new THREE.Mesh(knotGeometry, stringMaterial);
+      knot.position.set(x, y - 3.15, z);
+      scene.add(knot);
     });
 
-    // "Happy Birthday" text on wall
-    const textCanvas = document.createElement('canvas');
-    const textContext = textCanvas.getContext('2d');
-    if (textContext) {
-      textCanvas.width = 2048;
-      textCanvas.height = 512;
-      textContext.fillStyle = 'transparent';
-      textContext.fillRect(0, 0, textCanvas.width, textCanvas.height);
-      textContext.font = 'bold 120px Arial';
-      textContext.fillStyle = '#ff1493';
-      textContext.strokeStyle = '#ffd700';
-      textContext.lineWidth = 8;
-      textContext.textAlign = 'center';
-      textContext.textBaseline = 'middle';
-      textContext.strokeText('HAPPY BIRTHDAY!', textCanvas.width / 2, textCanvas.height / 2);
-      textContext.fillText('HAPPY BIRTHDAY!', textCanvas.width / 2, textCanvas.height / 2);
+    // Elegant "Happy Birthday" banner on wall
+    const bannerCanvas = document.createElement('canvas');
+    const bannerContext = bannerCanvas.getContext('2d');
+    if (bannerContext) {
+      bannerCanvas.width = 2560;
+      bannerCanvas.height = 640;
       
-      const wallTextTexture = new THREE.CanvasTexture(textCanvas);
-      const wallTextGeometry = new THREE.PlaneGeometry(10, 2.5);
-      const wallTextMaterial = new THREE.MeshStandardMaterial({ 
-        map: wallTextTexture,
+      // Transparent background
+      bannerContext.clearRect(0, 0, bannerCanvas.width, bannerCanvas.height);
+      
+      // Add decorative elements
+      bannerContext.font = 'bold italic 140px Georgia, serif';
+      bannerContext.textAlign = 'center';
+      bannerContext.textBaseline = 'middle';
+      
+      // Text shadow for depth
+      bannerContext.shadowColor = 'rgba(255, 20, 147, 0.5)';
+      bannerContext.shadowBlur = 20;
+      bannerContext.shadowOffsetX = 5;
+      bannerContext.shadowOffsetY = 5;
+      
+      // Gold stroke
+      bannerContext.strokeStyle = '#ffd700';
+      bannerContext.lineWidth = 12;
+      bannerContext.lineJoin = 'round';
+      bannerContext.strokeText('HAPPY BIRTHDAY!', bannerCanvas.width / 2, bannerCanvas.height / 2);
+      
+      // Gradient fill
+      const textGradient = bannerContext.createLinearGradient(0, 0, 0, bannerCanvas.height);
+      textGradient.addColorStop(0, '#ff1493');
+      textGradient.addColorStop(0.5, '#ff69b4');
+      textGradient.addColorStop(1, '#ff1493');
+      bannerContext.fillStyle = textGradient;
+      bannerContext.fillText('HAPPY BIRTHDAY!', bannerCanvas.width / 2, bannerCanvas.height / 2);
+      
+      const bannerTexture = new THREE.CanvasTexture(bannerCanvas);
+      const bannerGeometry = new THREE.PlaneGeometry(12, 3);
+      const bannerMaterial = new THREE.MeshStandardMaterial({ 
+        map: bannerTexture,
         transparent: true,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        emissive: 0xff1493,
+        emissiveIntensity: 0.1
       });
-      const wallText = new THREE.Mesh(wallTextGeometry, wallTextMaterial);
-      wallText.position.set(0, 6, -7.8);
-      scene.add(wallText);
+      const banner = new THREE.Mesh(bannerGeometry, bannerMaterial);
+      banner.position.set(0, 7.5, -7.8);
+      scene.add(banner);
+      
+      // Decorative banner frame lights
+      for (let i = 0; i < 10; i++) {
+        const lightX = -5.5 + (i * 1.2);
+        const lightGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+        const lightMaterial = new THREE.MeshStandardMaterial({ 
+          color: i % 2 === 0 ? 0xffd700 : 0xff1493,
+          emissive: i % 2 === 0 ? 0xffd700 : 0xff1493,
+          emissiveIntensity: 0.8,
+          roughness: 0.3,
+          metalness: 0.7
+        });
+        const light = new THREE.Mesh(lightGeometry, lightMaterial);
+        light.position.set(lightX, 9, -7.7);
+        scene.add(light);
+        
+        const bottomLight = light.clone();
+        bottomLight.position.set(lightX, 6, -7.7);
+        scene.add(bottomLight);
+      }
     }
 
-    // Confetti particles (celebration effect)
+    // Luxurious confetti celebration effect
     const confettiGeometry = new THREE.BufferGeometry();
-    const confettiCount = 500;
+    const confettiCount = 800;
     const confettiPosArray = new Float32Array(confettiCount * 3);
     const confettiColors = new Float32Array(confettiCount * 3);
     const confettiVelocities: number[] = [];
 
     for (let i = 0; i < confettiCount; i++) {
-      confettiPosArray[i * 3] = (Math.random() - 0.5) * 20;
-      confettiPosArray[i * 3 + 1] = Math.random() * 15 + 5;
-      confettiPosArray[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      confettiPosArray[i * 3] = (Math.random() - 0.5) * 25;
+      confettiPosArray[i * 3 + 1] = Math.random() * 18 + 8;
+      confettiPosArray[i * 3 + 2] = (Math.random() - 0.5) * 25;
 
       const colorChoice = Math.random();
-      if (colorChoice < 0.33) {
+      if (colorChoice < 0.25) {
         confettiColors[i * 3] = 1;
-        confettiColors[i * 3 + 1] = 0.7;
-        confettiColors[i * 3 + 2] = 0.8; // Pink
-      } else if (colorChoice < 0.66) {
+        confettiColors[i * 3 + 1] = 0.08;
+        confettiColors[i * 3 + 2] = 0.58; // Hot pink
+      } else if (colorChoice < 0.5) {
         confettiColors[i * 3] = 1;
         confettiColors[i * 3 + 1] = 0.84;
         confettiColors[i * 3 + 2] = 0; // Gold
+      } else if (colorChoice < 0.75) {
+        confettiColors[i * 3] = 1;
+        confettiColors[i * 3 + 1] = 0.75;
+        confettiColors[i * 3 + 2] = 0.93; // Light pink
       } else {
-        confettiColors[i * 3] = 0.58;
+        confettiColors[i * 3] = 0.85;
         confettiColors[i * 3 + 1] = 0.44;
-        confettiColors[i * 3 + 2] = 0.86; // Purple
+        confettiColors[i * 3 + 2] = 0.84; // Orchid
       }
 
-      confettiVelocities.push(Math.random() * 0.02 + 0.01);
+      confettiVelocities.push(Math.random() * 0.025 + 0.015);
     }
 
     confettiGeometry.setAttribute('position', new THREE.BufferAttribute(confettiPosArray, 3));
     confettiGeometry.setAttribute('color', new THREE.BufferAttribute(confettiColors, 3));
     const confettiMaterial = new THREE.PointsMaterial({
-      size: 0.15,
+      size: 0.2,
       vertexColors: true,
       transparent: true,
       opacity: 1,
+      sizeAttenuation: true
     });
     const confettiMesh = new THREE.Points(confettiGeometry, confettiMaterial);
     scene.add(confettiMesh);
 
-    // Ambient particles
-    const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 300;
-    const posArray = new Float32Array(particlesCount * 3);
+    // Magical ambient sparkle particles
+    const sparkleGeometry = new THREE.BufferGeometry();
+    const sparkleCount = 400;
+    const sparklePosArray = new Float32Array(sparkleCount * 3);
+    const sparkleColors = new Float32Array(sparkleCount * 3);
 
-    for (let i = 0; i < particlesCount * 3; i++) {
-      posArray[i] = (Math.random() - 0.5) * 20;
+    for (let i = 0; i < sparkleCount; i++) {
+      sparklePosArray[i * 3] = (Math.random() - 0.5) * 30;
+      sparklePosArray[i * 3 + 1] = Math.random() * 15;
+      sparklePosArray[i * 3 + 2] = (Math.random() - 0.5) * 30;
+      
+      // Soft pink and gold sparkles
+      const isGold = Math.random() > 0.5;
+      if (isGold) {
+        sparkleColors[i * 3] = 1;
+        sparkleColors[i * 3 + 1] = 0.84;
+        sparkleColors[i * 3 + 2] = 0.5;
+      } else {
+        sparkleColors[i * 3] = 1;
+        sparkleColors[i * 3 + 1] = 0.8;
+        sparkleColors[i * 3 + 2] = 0.95;
+      }
     }
 
-    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.05,
-      color: 0xffb6c1,
+    sparkleGeometry.setAttribute('position', new THREE.BufferAttribute(sparklePosArray, 3));
+    sparkleGeometry.setAttribute('color', new THREE.BufferAttribute(sparkleColors, 3));
+    const sparkleMaterial = new THREE.PointsMaterial({
+      size: 0.08,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.7,
+      sizeAttenuation: true
     });
-    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+    const particlesMesh = new THREE.Points(sparkleGeometry, sparkleMaterial);
     scene.add(particlesMesh);
 
     // Mouse interaction
@@ -605,11 +831,13 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
       scene.rotation.y = rotationY;
       scene.rotation.x = rotationX;
 
-      // Animate flames
+      // Animate flames with realistic flicker
       flames.forEach((flame, index) => {
-        const time = Date.now() * 0.003;
-        flame.scale.y = 1.2 + Math.sin(time + index) * 0.2;
-        flame.position.y += Math.sin(time * 2 + index) * 0.002;
+        const time = Date.now() * 0.004;
+        const baseY = flame.position.y;
+        flame.scale.y = 1.3 + Math.sin(time + index) * 0.25 + Math.sin(time * 3 + index) * 0.1;
+        flame.scale.x = 0.7 + Math.sin(time * 2 + index) * 0.15;
+        flame.scale.z = 0.7 + Math.cos(time * 2 + index) * 0.15;
       });
 
       // Gentle table rotation
@@ -631,13 +859,18 @@ export const BirthdayScene3D = ({ photos, birthdayName = "Happy Birthday" }: Bir
       }
       confettiGeometry.attributes.position.needsUpdate = true;
 
-      // Fade out confetti after 5 seconds
-      if (animationTime > 5 && confettiMaterial.opacity > 0) {
-        confettiMaterial.opacity -= 0.01;
+      // Fade out confetti after 6 seconds
+      if (animationTime > 6 && confettiMaterial.opacity > 0) {
+        confettiMaterial.opacity -= 0.008;
       }
 
-      // Animate particles
-      particlesMesh.rotation.y += 0.001;
+      // Animate sparkle particles with gentle drift
+      particlesMesh.rotation.y += 0.0008;
+      const sparklePositions = sparkleGeometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < sparkleCount; i++) {
+        sparklePositions[i * 3 + 1] += Math.sin(animationTime * 0.5 + i) * 0.002;
+      }
+      sparkleGeometry.attributes.position.needsUpdate = true;
 
       renderer.render(scene, camera);
     };
